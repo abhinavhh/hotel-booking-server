@@ -1,8 +1,12 @@
 import { type Request, type Response } from 'express';
-import express from "express"
-const app = express();
-const PORT = 3000;
+import express from "express";
+import dotenv from "dotenv";
+dotenv.config();
+import connectDB from './configs/db';
 
+const app = express();
+
+connectDB();
 // Middleware to parse JSON
 app.use(express.json());
 
@@ -12,6 +16,6 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+app.listen(process.env.port, () => {
+  console.log(`Server running on http://localhost:${process.env.port}`);
 });
