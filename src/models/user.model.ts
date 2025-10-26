@@ -1,84 +1,95 @@
-// user model
-import express from 'express';
-import mongoose, { Document} from 'mongoose';
+import mongoose, { Document, Types } from 'mongoose';
 import bcrypt from 'bcryptjs';
+
 export interface IUser extends Document {
-  username: string;
+  _id: Types.ObjectId;
+  username?: string;
+  name?: string;
   email: string;
   password: string;
-  role: 'guest' | 'admin';
+  role?: 'User' | 'Admin';
+  otp?: number | null;
+  otpExpires?: Date | null;
   createdAt: Date;
   updatedAt: Date;
+  comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
-const userSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema<IUser>(
+  {
     username: {
-        unique: true,
-        type: String,
-        required: true,
-        trim: true,
-        minLength: 3
+      type: String,
+      unique: true,
+      required: true,
+      trim: true,
+      minLength: 3,
+    },
+    name: {
+      type: String,
+      trim: true,
     },
     email: {
-        unique: true,
-        type: String,
-        required: true,
-        trim: true,
-        match: /.+\@.+\..+/,
-        lowercase: true
+      type: String,
+      unique: true,
+      required: true,
+      trim: true,
+      lowercase: true,
+      match: /.+\@.+\..+/,
     },
     password: {
-        type: String,
-        required: true,
-        minLength: 6,
-        select: false,
-        trim: true,
+      type: String,
+      required: true,
+      trim: true,
+      minLength: 6,
+      select: false, // Hidden by default (good for security)
     },
     role: {
-        type: String,
-        enum: ['User', 'Admin'],
-        default: 'User'
+      type: String,
+      enum: ['User', 'Admin'],
+      default: 'User',
     },
     otp: {
-        type: Number,
+      type: Number,
+      default: null,
     },
     otpExpires: {
-        type: Date,
-    }
-}, { timestamps: true });
+      type: Date,
+      default: null,
+    },
+  },
+  { timestamps: true }
+);
 
-// --Security : -- Store password in hashed format
-userSchema.pre('save', async function(next) {
-    // hash password if it has been modified or is new
-    if(!this.isModified('password')) {
-        return next();
-    }
+// --- Hash password before saving ---
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
 
-    try{
-        // create a salt and hash the password
-        const salt = await bcrypt.genSalt(10); // 10 is the salt rounds
-        this.password = await bcrypt.hash(this.password, salt);
-        next();
-    }
-    catch (err) {
-        console.error('Error hashing password: ', err)
-    }
-})
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (err) {
+    console.error('Error hashing password:', err);
+    next(err as any);
+  }
+});
 
-// --Secuirity : -- Compare password
-userSchema.methods.comparePassword = async function(candidatePassword: any): Promise<boolean> {
-    try {
-        return await bcrypt.compare(candidatePassword, this.password);
-    }
-    catch (err) {
-        console.error('Error comparing password: ', err);
-        return false;
-    }
-}
+// --- Compare password method ---
+userSchema.methods.comparePassword = async function (
+  candidatePassword: string
+): Promise<boolean> {
+  try {
+    return await bcrypt.compare(candidatePassword, this.password);
+  } catch (err) {
+    console.error('Error comparing password:', err);
+    return false;
+  }
+};
 
-const User = mongoose.model('User', userSchema);
+// --- Fix for ProfileService.changePassword() ---
+userSchema.statics.findByIdWithPassword = function (id: string) {
+  return this.findById(id).select('+password');
+};
+
+const User = mongoose.model<IUser>('User', userSchema);
 export default User;
-
-
-
-

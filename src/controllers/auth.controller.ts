@@ -13,7 +13,6 @@ export const registerUser = async (req: Request, res: Response) => {
     }
 
     const user = await User.create({ username, email, password });
-    const token = generateToken(user._id.toString(), user.email, user.role);
 
     res.status(201).json({
       message: "User registered successfully",
@@ -22,8 +21,7 @@ export const registerUser = async (req: Request, res: Response) => {
         username: user.username,
         email: user.email,
         role: user.role,
-      },
-      token,
+      }
     });
   } catch (error) {
     console.error("Register error:", error);
