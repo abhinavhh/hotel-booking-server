@@ -1,8 +1,9 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Types } from 'mongoose';
 
 export interface IBooking extends Document {
-  userId: mongoose.Types.ObjectId;
-  hotelId: mongoose.Types.ObjectId;
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+  hotelId: Types.ObjectId;
   roomId: string;
   hotelName: string;
   hotelImage: string;
@@ -15,6 +16,11 @@ export interface IBooking extends Document {
   status: 'Confirmed' | 'Pending' | 'Cancelled' | 'Completed';
   bookingDate: Date;
   paymentStatus: 'Paid' | 'Pending' | 'Refunded';
+  paymentDetails?: {
+    orderId?: string;
+    paymentId?: string;
+    paidAt?: Date;
+  };
   specialRequests?: string;
   cancellationReason?: string;
   cancelledAt?: Date;
@@ -44,6 +50,11 @@ const BookingSchema = new Schema<IBooking>({
     type: String,
     enum: ['Paid', 'Pending', 'Refunded'],
     default: 'Pending'
+  },
+  paymentDetails: {
+    orderId: { type: String },
+    paymentId: { type: String },
+    paidAt: { type: Date }
   },
   specialRequests: { type: String },
   cancellationReason: { type: String },

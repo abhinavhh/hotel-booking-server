@@ -8,6 +8,7 @@ import dashboardRoutes from "./routes/dashboard.route";
 import bookingRoutes from "./routes/booking.route";
 import hotelRoutes from "./routes/hotel.route";
 import profileRoutes from "./routes/profile.route";
+import paymentRoutes from "./routes/payment.route";
 import { authMiddleware } from './middlewares/authMiddleware';
 import { errorHandler } from './utils/errorhandler';
 import { seedHotels } from './utils/seedHotels';
@@ -26,21 +27,31 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Middleware to parse JSON
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Serve static files (for uploaded avatars)
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-
 // CORS configuration
 app.use(
   cors({
     origin: "http://localhost:5173", // your React dev server
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    credentials: true, // optional, needed for cookies
+    credentials: true,
   })
 );
+
+// Parse JSON for all routes except webhook
+app.use((req, res, next) => {
+  if (req.originalUrl === "/api/payment/webhook") {
+    next(); // skip json parsing for webhook
+  } else {
+    express.json()(req, res, next);
+  }
+});
+
+// Capture raw body for webhook
+app.use("/api/payment/webhook", express.raw({ type: "*/*" }));
+
+app.use(express.urlencoded({ extended: true }));
+
+// Serve static files (for uploaded avatars)
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Health check route
 app.get('/api', authMiddleware, (req: Request, res: Response) => {
@@ -57,6 +68,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/hotels", hotelRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/payment", paymentRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
