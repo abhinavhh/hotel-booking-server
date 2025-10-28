@@ -34,7 +34,7 @@ const userSchema = new mongoose.Schema<IUser>(
       required: true,
       trim: true,
       lowercase: true,
-      match: /.+\@.+\..+/,
+      match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email'],
     },
     password: {
       type: String,
@@ -90,6 +90,9 @@ userSchema.methods.comparePassword = async function (
 userSchema.statics.findByIdWithPassword = function (id: string) {
   return this.findById(id).select('+password');
 };
+
+userSchema.index({ email: 1 });
+userSchema.index({ username: 1 });
 
 const User = mongoose.model<IUser>('User', userSchema);
 export default User;
