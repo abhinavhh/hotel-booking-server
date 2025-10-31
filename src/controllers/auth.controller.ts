@@ -233,9 +233,8 @@ export const resetPassword = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
-    // Hash new password
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(newPassword, salt);
+    // save new password 
+    user.password = newPassword;
 
     // Clear OTP
     user.otp = null;
