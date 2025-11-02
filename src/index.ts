@@ -9,6 +9,7 @@ import bookingRoutes from "./routes/booking.route";
 import hotelRoutes from "./routes/hotel.route";
 import profileRoutes from "./routes/profile.route";
 import paymentRoutes from "./routes/payment.route";
+import adminRoute from './routes/admin.route';
 import { authMiddleware } from './middlewares/authMiddleware';
 import { errorHandler } from './utils/errorhandler';
 import { seedHotels } from './utils/seedHotels';
@@ -69,6 +70,7 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/hotels", hotelRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use('/api/admin', adminRoute);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
