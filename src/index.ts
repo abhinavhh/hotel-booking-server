@@ -31,7 +31,7 @@ if (!fs.existsSync(uploadsDir)) {
 // CORS configuration
 app.use(
   cors({
-    origin: "http://localhost:5173", // your React dev server
+    origin: process.env.CLIENT_URL, // your React dev server
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   })
